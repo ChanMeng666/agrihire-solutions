@@ -174,3 +174,4 @@ connect.py
 # Exclude product image folders
 /static/images/product/
 /static/images/product_images/
+.cursorignore
