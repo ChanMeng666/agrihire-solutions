@@ -2,7 +2,7 @@
 
 [![Project Banner](https://github.com/user-attachments/assets/164c93f0-ef2b-458c-b58c-edfc98c62cac)](#)
 
-# 🚜 AgriHire Solutions<br/><small>Equipment and Order Management System (EOMS)</small>
+# 🚜 AgriHire Solutions<br/><h3>Equipment and Order Management System (EOMS)</h3>
 
 A comprehensive agricultural equipment rental management platform that revolutionizes how agricultural businesses manage their equipment inventory, customer relationships, and rental operations.<br/>
 Supports multi-store operations, real-time availability tracking, and advanced analytics with role-based access control.<br/>
