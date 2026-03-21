@@ -22,9 +22,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Allow public paths and API routes
+  // Allow public paths, auth paths, and API routes
   if (
     PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
+    AUTH_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/")
   ) {
