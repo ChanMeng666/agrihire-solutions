@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { getActiveStores } from "@/server/queries/stores";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Mail, Phone, MapPin } from "lucide-react";
+import { ContactForm } from "./contact-form";
 
 export const metadata = { title: "Contact Us" };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const stores = await getActiveStores();
+
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mx-auto max-w-4xl">
@@ -45,27 +45,7 @@ export default function ContactPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" placeholder="Your name" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject</Label>
-                <Input id="subject" placeholder="How can we help?" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea id="message" placeholder="Tell us more..." rows={5} />
-              </div>
-              <Button type="submit">Send Message</Button>
-            </form>
+            <ContactForm stores={stores} />
           </CardContent>
         </Card>
       </div>

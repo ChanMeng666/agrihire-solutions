@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tractor, ArrowLeft, MapPin, Clock, DollarSign } from "lucide-react";
+import { HireForm } from "@/components/equipment/hire-form";
 
 export async function generateMetadata({
   params,
@@ -208,12 +209,10 @@ export default async function ProductDetailPage({
             </CardContent>
           </Card>
 
-          {/* Add to cart */}
-          <Link href="/login">
-            <Button size="lg" className="w-full text-base">
-              Sign in to Hire
-            </Button>
-          </Link>
+          {/* Hire Form */}
+          {stores.length > 0 && (
+            <HireForm productCode={product.productCode} stores={stores} />
+          )}
         </div>
       </div>
 
