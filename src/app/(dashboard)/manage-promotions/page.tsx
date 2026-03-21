@@ -75,9 +75,15 @@ export default async function ManagePromotionsPage() {
                   new Date(p.endDate) >= now;
                 return (
                   <TableRow key={p.promoCode}>
-                    <TableCell className="font-mono">{p.promoCode}</TableCell>
+                    <TableCell className="font-mono">
+                      <Link href={`/manage-promotions/${p.promoCode}`} className="text-primary hover:underline">
+                        {p.promoCode}
+                      </Link>
+                    </TableCell>
                     <TableCell className="font-medium">
-                      {p.name || p.promoCode}
+                      <Link href={`/manage-promotions/${p.promoCode}`}>
+                        {p.name || p.promoCode}
+                      </Link>
                     </TableCell>
                     <TableCell>{p.discRate}%</TableCell>
                     <TableCell className="text-sm">

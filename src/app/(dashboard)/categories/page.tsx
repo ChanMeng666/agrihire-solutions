@@ -2,6 +2,7 @@ import { requireStaff } from "@/lib/auth-utils";
 import { getAllCategories } from "@/server/queries/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -11,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Warehouse } from "lucide-react";
+import { AddCategoryForm, CategoryStatusToggle } from "./category-actions";
 
 export const metadata = { title: "Categories" };
 
@@ -37,6 +39,7 @@ export default async function CategoriesPage() {
                 <TableHead>Name</TableHead>
                 <TableHead className="text-center">Products</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -56,10 +59,20 @@ export default async function CategoriesPage() {
                       {c.status === 1 ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-right">
+                    <CategoryStatusToggle
+                      categoryCode={c.categoryCode}
+                      isActive={c.status === 1}
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          <Separator className="my-6" />
+
+          <AddCategoryForm />
         </CardContent>
       </Card>
     </div>

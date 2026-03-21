@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth-utils";
 import { getAllStores } from "@/server/queries/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,10 +24,12 @@ export default async function AdminStoresPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Store Management</h1>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Store
-        </Button>
+        <Link href="/admin/stores/new">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Store
+          </Button>
+        </Link>
       </div>
 
       <Card>

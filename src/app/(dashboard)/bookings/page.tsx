@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireStaff } from "@/lib/auth-utils";
 import { getBookingsByStore } from "@/server/queries/bookings";
 import { db } from "@/lib/db";
@@ -58,7 +59,11 @@ export default async function BookingsPage() {
               <TableBody>
                 {bookings.map((b) => (
                   <TableRow key={b.bookingId}>
-                    <TableCell className="font-medium">#{b.bookingId}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link href={`/bookings/${b.bookingId}`} className="text-primary hover:underline">
+                        #{b.bookingId}
+                      </Link>
+                    </TableCell>
                     <TableCell>
                       {b.customerFirstName} {b.customerLastName}
                       {b.customerPhone && (

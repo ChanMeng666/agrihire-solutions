@@ -65,7 +65,11 @@ export default async function ManageNewsPage() {
             <TableBody>
               {newsList.map((n) => (
                 <TableRow key={n.newsId}>
-                  <TableCell className="font-medium">{n.title || "Untitled"}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link href={`/manage-news/${n.newsId}`} className="hover:text-primary hover:underline">
+                      {n.title || "Untitled"}
+                    </Link>
+                  </TableCell>
                   <TableCell>{n.storeName}</TableCell>
                   <TableCell className="text-sm">
                     {n.createDate

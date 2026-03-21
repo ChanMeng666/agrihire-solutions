@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -88,6 +88,7 @@ export function Header() {
               <Link href="/cart">
                 <Button variant="ghost" size="icon" className="relative">
                   <ShoppingCart className="h-5 w-5" />
+                  <CartBadge />
                 </Button>
               </Link>
 
@@ -213,5 +214,24 @@ export function Header() {
         </div>
       </div>
     </header>
+  );
+}
+
+function CartBadge() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/cart/count")
+      .then((r) => (r.ok ? r.json() : { count: 0 }))
+      .then((data) => setCount(data.count))
+      .catch(() => {});
+  }, []);
+
+  if (count <= 0) return null;
+
+  return (
+    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+      {count > 9 ? "9+" : count}
+    </span>
   );
 }

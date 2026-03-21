@@ -83,10 +83,12 @@ export default async function EquipmentPage() {
                 {machines.map((m) => (
                   <TableRow key={m.machineId}>
                     <TableCell className="font-mono text-sm">
-                      {m.sn}
+                      <Link href={`/equipment/${m.machineId}`} className="text-primary hover:underline">
+                        {m.sn}
+                      </Link>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {m.productName}
+                      <Link href={`/equipment/${m.machineId}`}>{m.productName}</Link>
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{m.categoryName}</Badge>
