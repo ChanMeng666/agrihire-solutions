@@ -8,10 +8,9 @@ import {
   Clock,
   MapPin,
   ArrowRight,
-  Wrench,
-  Truck,
-  Sprout,
 } from "lucide-react";
+import { getFeaturedProducts, getActiveCategories } from "@/server/queries/products";
+import { getActivePromotions } from "@/server/queries/promotions";
 
 const FEATURES = [
   {
@@ -40,30 +39,21 @@ const FEATURES = [
   },
 ];
 
-const CATEGORIES = [
-  {
-    icon: Tractor,
-    name: "Tractors",
-    description: "Compact to full-size tractors",
-  },
-  {
-    icon: Wrench,
-    name: "Cultivation",
-    description: "Ploughs, harrows & tillers",
-  },
-  {
-    icon: Truck,
-    name: "Transport",
-    description: "Trailers & transport equipment",
-  },
-  {
-    icon: Sprout,
-    name: "Planting",
-    description: "Seeders & planting machinery",
-  },
-];
+export default async function HomePage() {
+  let categories: Awaited<ReturnType<typeof getActiveCategories>> = [];
+  let featuredProducts: Awaited<ReturnType<typeof getFeaturedProducts>> = [];
+  let promotions: Awaited<ReturnType<typeof getActivePromotions>> = [];
 
-export default function HomePage() {
+  try {
+    [categories, featuredProducts, promotions] = await Promise.all([
+      getActiveCategories(),
+      getFeaturedProducts(6),
+      getActivePromotions(),
+    ]);
+  } catch {
+    // DB not connected yet — show static fallback
+  }
+
   return (
     <>
       {/* Hero Section */}
@@ -100,38 +90,132 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight">
-              Equipment Categories
-            </h2>
-            <p className="mt-3 text-muted-foreground">
-              Find the right machinery for your needs
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <Link key={cat.name} href="/for-hire">
+      {categories.length > 0 && (
+        <section className="py-16 md:py-24">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold tracking-tight">
+                Equipment Categories
+              </h2>
+              <p className="mt-3 text-muted-foreground">
+                Find the right machinery for your needs
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {categories.slice(0, 8).map((cat) => (
+                <Link key={cat.categoryCode} href={`/for-hire/${cat.categoryCode}`}>
                   <Card className="group cursor-pointer transition-all hover:shadow-lg hover:border-primary/30">
                     <CardContent className="flex flex-col items-center text-center p-8">
                       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                        <Icon className="h-7 w-7" />
+                        <Tractor className="h-7 w-7" />
                       </div>
                       <h3 className="text-lg font-semibold">{cat.name}</h3>
-                      <p className="mt-1.5 text-sm text-muted-foreground">
-                        {cat.description}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Featured Products Section */}
+      {featuredProducts.length > 0 && (
+        <section className="py-16 md:py-24 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight">
+                  Featured Equipment
+                </h2>
+                <p className="mt-2 text-muted-foreground">
+                  Popular equipment available for hire
+                </p>
+              </div>
+              <Link href="/for-hire">
+                <Button variant="outline">
+                  View All
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredProducts.map((p) => (
+                <Link
+                  key={p.productCode}
+                  href={`/for-hire/${p.categoryCode}/${p.productCode}`}
+                >
+                  <Card className="group overflow-hidden transition-all hover:shadow-lg hover:border-primary/30">
+                    <div className="aspect-[4/3] bg-muted flex items-center justify-center overflow-hidden">
+                      {p.image ? (
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        />
+                      ) : (
+                        <Tractor className="h-12 w-12 text-muted-foreground/20" />
+                      )}
+                    </div>
+                    <CardContent className="p-5">
+                      <Badge variant="secondary" className="mb-2 text-xs">
+                        {p.categoryName}
+                      </Badge>
+                      <h3 className="font-semibold text-lg line-clamp-1">
+                        {p.name}
+                      </h3>
+                      <p className="mt-2 text-lg font-bold text-primary">
+                        ${p.priceA}
+                        <span className="text-sm font-normal text-muted-foreground">
+                          /day
+                        </span>
                       </p>
                     </CardContent>
                   </Card>
                 </Link>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Active Promotions */}
+      {promotions.length > 0 && (
+        <section className="py-16 md:py-24">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold tracking-tight">
+                Current Promotions
+              </h2>
+              <p className="mt-2 text-muted-foreground">
+                Save on your next equipment hire
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              {promotions.slice(0, 3).map((promo) => (
+                <Link key={promo.promoCode} href="/promotions">
+                  <Card className="border-primary/20 transition-all hover:shadow-lg">
+                    <CardContent className="p-6 text-center">
+                      <Badge className="text-lg px-4 py-1 mb-3">
+                        {promo.discRate}% OFF
+                      </Badge>
+                      <h3 className="font-semibold">
+                        {promo.name || promo.promoCode}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {promo.storeName}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Code: <span className="font-mono">{promo.promoCode}</span>
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Features Section */}
       <section className="py-16 md:py-24 bg-muted/40">
