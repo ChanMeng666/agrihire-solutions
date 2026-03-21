@@ -1,7 +1,5 @@
-import { requireAuth } from "@/lib/auth-utils";
 import { getMessagesByCustomer } from "@/server/queries/messages";
-import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { getCustomerContext } from "@/lib/user-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Calendar } from "lucide-react";
@@ -9,13 +7,8 @@ import { MessageSquare, Calendar } from "lucide-react";
 export const metadata = { title: "Messages" };
 
 export default async function MessagesPage() {
-  const session = await requireAuth();
-  const userId = Number(session.user.id);
-
-  const customerResult = await db.execute(
-    sql`SELECT customer_id FROM customer WHERE user_id = ${userId}`
-  );
-  const customerId = (customerResult as unknown as Array<{ customer_id: number }>)[0]?.customer_id;
+  const ctx = await getCustomerContext();
+  const customerId = ctx?.customerId;
 
   const messages = customerId ? await getMessagesByCustomer(customerId) : [];
 

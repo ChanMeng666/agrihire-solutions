@@ -1,4 +1,5 @@
 import { requireStaff } from "@/lib/auth-utils";
+import { getStaffContext } from "@/lib/user-context";
 import { db } from "@/lib/db";
 import { eq, sql } from "drizzle-orm";
 import { machine, product, category, store } from "../../../../drizzle/schema";
@@ -18,12 +19,9 @@ export const metadata = { title: "Inventory" };
 
 export default async function InventoryPage() {
   const session = await requireStaff();
-  const userId = Number(session.user.id);
 
-  const staffResult = await db.execute(
-    sql`SELECT store_id FROM staff WHERE user_id = ${userId}`
-  );
-  const storeId = (staffResult as unknown as Array<{ store_id: number }>)[0]?.store_id;
+  const ctx = await getStaffContext();
+  const storeId = ctx?.storeId;
 
   const inventory = storeId
     ? await db

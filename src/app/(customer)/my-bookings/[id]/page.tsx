@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAuth } from "@/lib/auth-utils";
 import { getBookingDetail } from "@/server/queries/bookings";
-import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { requireCustomerContext } from "@/lib/user-context";
 import {
   Card,
   CardContent,
@@ -31,14 +29,7 @@ export default async function BookingDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await requireAuth();
-  const userId = Number(session.user.id);
-
-  const customerResult = await db.execute(
-    sql`SELECT customer_id FROM customer WHERE user_id = ${userId}`
-  );
-  const customerId = (customerResult as unknown as Array<{ customer_id: number }>)[0]?.customer_id;
-  if (!customerId) notFound();
+  const { customerId } = await requireCustomerContext();
 
   const booking = await getBookingDetail(Number(id), customerId);
   if (!booking) notFound();

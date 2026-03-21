@@ -1,21 +1,15 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { hireRecord, bookingItem, machine } from "../../../drizzle/schema";
 import { requireStaff } from "@/lib/auth-utils";
+import { requireStaffContext } from "@/lib/user-context";
 import { revalidatePath } from "next/cache";
 
 export async function checkoutEquipment(bookingItemId: number) {
-  const session = await requireStaff();
-  const userId = Number(session.user.id);
-
-  const staffResult = await db.execute(
-    sql`SELECT staff_id FROM staff WHERE user_id = ${userId}`
-  );
-  const staffId = (staffResult as unknown as Array<{ staff_id: number }>)[0]
-    ?.staff_id;
-  if (!staffId) throw new Error("Staff profile not found");
+  await requireStaff();
+  const { staffId } = await requireStaffContext();
 
   // Update hire record with checkout info
   await db
@@ -48,15 +42,8 @@ export async function returnEquipment(
   bookingItemId: number,
   note?: string
 ) {
-  const session = await requireStaff();
-  const userId = Number(session.user.id);
-
-  const staffResult = await db.execute(
-    sql`SELECT staff_id FROM staff WHERE user_id = ${userId}`
-  );
-  const staffId = (staffResult as unknown as Array<{ staff_id: number }>)[0]
-    ?.staff_id;
-  if (!staffId) throw new Error("Staff profile not found");
+  await requireStaff();
+  const { staffId } = await requireStaffContext();
 
   // Update hire record with return info
   await db

@@ -1,6 +1,5 @@
 import { requireStaff } from "@/lib/auth-utils";
-import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { getStaffContext } from "@/lib/user-context";
 import { getPendingCheckouts, getCheckedOutItems } from "@/server/actions/hire-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,12 +35,9 @@ interface HireItem {
 
 export default async function CheckoutPage() {
   const session = await requireStaff();
-  const userId = Number(session.user.id);
 
-  const staffResult = await db.execute(
-    sql`SELECT store_id FROM staff WHERE user_id = ${userId}`
-  );
-  const storeId = (staffResult as unknown as Array<{ store_id: number }>)[0]?.store_id;
+  const ctx = await getStaffContext();
+  const storeId = ctx?.storeId;
 
   const pending = storeId
     ? ((await getPendingCheckouts(storeId)) as unknown as HireItem[])

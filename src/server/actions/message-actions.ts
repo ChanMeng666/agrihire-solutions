@@ -1,21 +1,14 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { message, notifications } from "../../../drizzle/schema";
-import { requireAuth, requireStaff } from "@/lib/auth-utils";
+import { requireStaff } from "@/lib/auth-utils";
+import { requireCustomerContext } from "@/lib/user-context";
 import { revalidatePath } from "next/cache";
 
 export async function sendContactMessage(formData: FormData) {
-  const session = await requireAuth();
-  const userId = Number(session.user.id);
-
-  // Get customer ID
-  const customerResult = await db.execute(
-    sql`SELECT customer_id FROM customer WHERE user_id = ${userId}`
-  );
-  const customerId = (customerResult as unknown as Array<{ customer_id: number }>)[0]?.customer_id;
-  if (!customerId) throw new Error("Customer profile not found");
+  const { customerId } = await requireCustomerContext();
 
   const storeId = Number(formData.get("storeId"));
   const subject = formData.get("subject") as string;

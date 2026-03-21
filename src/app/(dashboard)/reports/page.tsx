@@ -1,7 +1,6 @@
 import { requireManager } from "@/lib/auth-utils";
 import { getRevenueByMonth, getBookingsByCategory } from "@/server/queries/dashboard";
-import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { getStaffContext } from "@/lib/user-context";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 
@@ -9,12 +8,9 @@ export const metadata = { title: "Reports" };
 
 export default async function ReportsPage() {
   const session = await requireManager();
-  const userId = Number(session.user.id);
 
-  const staffResult = await db.execute(
-    sql`SELECT store_id FROM staff WHERE user_id = ${userId}`
-  );
-  const storeId = (staffResult as unknown as Array<{ store_id: number }>)[0]?.store_id;
+  const ctx = await getStaffContext();
+  const storeId = ctx?.storeId;
 
   const [revenue, categories] = await Promise.all([
     storeId ? getRevenueByMonth(storeId, 12) : [],

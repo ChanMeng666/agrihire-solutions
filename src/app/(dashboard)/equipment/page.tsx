@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth-utils";
 import { getMachinesByStore } from "@/server/queries/dashboard";
-import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { getStaffContext } from "@/lib/user-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,12 +34,9 @@ function getMachineStatusBadge(status: number) {
 
 export default async function EquipmentPage() {
   const session = await requireStaff();
-  const userId = Number(session.user.id);
 
-  const staffResult = await db.execute(
-    sql`SELECT store_id FROM staff WHERE user_id = ${userId}`
-  );
-  const storeId = (staffResult as unknown as Array<{ store_id: number }>)[0]?.store_id;
+  const ctx = await getStaffContext();
+  const storeId = ctx?.storeId;
 
   const machines = storeId ? await getMachinesByStore(storeId) : [];
 

@@ -1,7 +1,6 @@
 import { requireStaff } from "@/lib/auth-utils";
 import { getDashboardStats, getRevenueByMonth, getBookingsByCategory } from "@/server/queries/dashboard";
-import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { getStaffContext } from "@/lib/user-context";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { CategoryChart } from "@/components/dashboard/category-chart";
@@ -10,13 +9,8 @@ export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const session = await requireStaff();
-  const userId = Number(session.user.id);
-
-  // Get staff's store ID
-  const staffResult = await db.execute(
-    sql`SELECT store_id FROM staff WHERE user_id = ${userId}`
-  );
-  const storeId = (staffResult as unknown as Array<{ store_id: number }>)[0]?.store_id;
+  const ctx = await getStaffContext();
+  const storeId = ctx?.storeId;
 
   if (!storeId) {
     return (

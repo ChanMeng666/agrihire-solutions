@@ -1,6 +1,7 @@
 import { requireStaff } from "@/lib/auth-utils";
+import { getStaffContext } from "@/lib/user-context";
 import { db } from "@/lib/db";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { message, customer } from "../../../../drizzle/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,12 +12,9 @@ export const metadata = { title: "Messages" };
 
 export default async function ManageMessagesPage() {
   const session = await requireStaff();
-  const userId = Number(session.user.id);
 
-  const staffResult = await db.execute(
-    sql`SELECT store_id FROM staff WHERE user_id = ${userId}`
-  );
-  const storeId = (staffResult as unknown as Array<{ store_id: number }>)[0]?.store_id;
+  const ctx = await getStaffContext();
+  const storeId = ctx?.storeId;
 
   const messages = storeId
     ? await db

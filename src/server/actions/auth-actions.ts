@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { eq, sql } from "drizzle-orm";
 import { resetTokens, user, customer } from "../../../drizzle/schema";
+import { sendPasswordResetEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto";
 
@@ -33,11 +34,10 @@ export async function requestPasswordReset(email: string) {
     expiryTime,
   });
 
-  // In production, send email with reset link via Resend
-  // For now, log the token (the link would be /reset-password/{token})
-  console.log(`Password reset token for ${email}: ${token}`);
+  // Send password reset email via Resend
+  await sendPasswordResetEmail(email, token);
 
-  return { success: true, token }; // Remove token from response in production
+  return { success: true };
 }
 
 export async function resetPassword(token: string, newPassword: string) {

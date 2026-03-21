@@ -5,18 +5,11 @@ import { eq, and, sql } from "drizzle-orm";
 import { cart, cartItem, product, promotion, promoProduct } from "../../../drizzle/schema";
 import { getOrCreateCart } from "../queries/cart";
 import { requireAuth } from "@/lib/auth-utils";
+import { requireCustomerContext } from "@/lib/user-context";
 import { revalidatePath } from "next/cache";
 
 export async function addToCart(formData: FormData) {
-  const session = await requireAuth();
-  const userId = Number(session.user.id);
-
-  // Get customer ID from user
-  const customerResult = await db.execute(
-    sql`SELECT customer_id FROM customer WHERE user_id = ${userId}`
-  );
-  const customerId = (customerResult as unknown as Array<{ customer_id: number }>)[0]?.customer_id;
-  if (!customerId) throw new Error("Customer profile not found");
+  const { customerId } = await requireCustomerContext();
 
   const productCode = formData.get("productCode") as string;
   const qty = Number(formData.get("qty") || 1);
@@ -78,14 +71,7 @@ export async function updateCartItemQty(cartItemId: number, qty: number) {
 }
 
 export async function applyPromoCode(promoCode: string) {
-  const session = await requireAuth();
-  const userId = Number(session.user.id);
-
-  const customerResult = await db.execute(
-    sql`SELECT customer_id FROM customer WHERE user_id = ${userId}`
-  );
-  const customerId = (customerResult as unknown as Array<{ customer_id: number }>)[0]?.customer_id;
-  if (!customerId) throw new Error("Customer profile not found");
+  const { customerId } = await requireCustomerContext();
 
   // Check if promo exists and is active
   const promoResult = await db
@@ -142,14 +128,7 @@ export async function applyPromoCode(promoCode: string) {
 }
 
 export async function removePromoCode() {
-  const session = await requireAuth();
-  const userId = Number(session.user.id);
-
-  const customerResult = await db.execute(
-    sql`SELECT customer_id FROM customer WHERE user_id = ${userId}`
-  );
-  const customerId = (customerResult as unknown as Array<{ customer_id: number }>)[0]?.customer_id;
-  if (!customerId) throw new Error("Customer profile not found");
+  const { customerId } = await requireCustomerContext();
 
   const customerCart = await getOrCreateCart(customerId);
 

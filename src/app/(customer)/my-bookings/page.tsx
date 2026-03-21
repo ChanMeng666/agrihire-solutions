@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { requireAuth } from "@/lib/auth-utils";
 import { getBookingsByCustomer } from "@/server/queries/bookings";
-import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { getCustomerContext } from "@/lib/user-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,15 +17,8 @@ function getStatusBadge(status: number) {
 }
 
 export default async function MyBookingsPage() {
-  const session = await requireAuth();
-  const userId = Number(session.user.id);
-
-  const customerResult = await db.execute(
-    sql`SELECT customer_id FROM customer WHERE user_id = ${userId}`
-  );
-  const customerId = (customerResult as unknown as Array<{ customer_id: number }>)[0]?.customer_id;
-
-  const bookings = customerId ? await getBookingsByCustomer(customerId) : [];
+  const ctx = await getCustomerContext();
+  const bookings = ctx ? await getBookingsByCustomer(ctx.customerId) : [];
 
   return (
     <div className="container mx-auto px-4 py-12">

@@ -1,8 +1,6 @@
-import { requireAuth } from "@/lib/auth-utils";
 import { getCartWithItems } from "@/server/queries/cart";
 import { getActiveStores } from "@/server/queries/stores";
-import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { requireCustomerContext } from "@/lib/user-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -22,21 +20,7 @@ import { SubmitBookingForm } from "./submit-form";
 export const metadata = { title: "Review Booking" };
 
 export default async function ReviewBookingPage() {
-  const session = await requireAuth();
-  const userId = Number(session.user.id);
-
-  const customerResult = await db.execute(
-    sql`SELECT customer_id FROM customer WHERE user_id = ${userId}`
-  );
-  const customerId = (customerResult as unknown as Array<{ customer_id: number }>)[0]?.customer_id;
-
-  if (!customerId) {
-    return (
-      <div className="container mx-auto px-4 py-12 text-center">
-        <p className="text-muted-foreground">Customer profile not found.</p>
-      </div>
-    );
-  }
+  const { customerId } = await requireCustomerContext();
 
   const [{ cart, items }, stores] = await Promise.all([
     getCartWithItems(customerId),
