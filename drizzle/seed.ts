@@ -10,8 +10,7 @@ async function seed() {
   await sql`TRUNCATE "user", store, category, product, machine, booking, booking_item, hire_record, cart, cart_item, payment, promotion, promo_product, message, notifications, news, service, setting, store_hour, staff, customer, reset_tokens CASCADE`;
 
   // ============================================================
-  // Users (password for all: Agri2024!)
-  // bcrypt hash of 'Agri2024!'
+  // Users
   // ============================================================
   const passwordHash = "$2b$12$jKWd4lQLw1V8fpEf5fmkVOxEzTtXRdzmpaz4EEmW3W/V0cy6/nVZq";
 

@@ -5,6 +5,8 @@ import { eq, sql } from "drizzle-orm";
 import { store, storeHour, staff, customer, user } from "../../../drizzle/schema";
 import { requireAdmin } from "@/lib/auth-utils";
 import { revalidatePath } from "next/cache";
+import crypto from "crypto";
+import { hashPassword } from "better-auth/crypto";
 
 // ============================================================
 // Store CRUD
@@ -93,15 +95,15 @@ export async function createStaff(formData: FormData) {
 
   const email = formData.get("email") as string;
   const role = formData.get("role") as string;
-  const defaultPassword = "AgriHire2024!"; // Default password, should be changed on first login
+  const tempPassword = crypto.randomBytes(16).toString("base64url");
+  const hashedPassword = await hashPassword(tempPassword);
 
   // Create user account
-  // Using raw SQL for password hashing compatibility
   const [newUser] = await db
     .insert(user)
     .values({
       email,
-      password: defaultPassword, // Better Auth will handle hashing
+      password: hashedPassword,
       role: role as "staff" | "lmgr" | "nmgr" | "admin",
     })
     .returning();
@@ -117,7 +119,7 @@ export async function createStaff(formData: FormData) {
   });
 
   revalidatePath("/admin/staff");
-  return { success: true };
+  return { success: true, tempPassword: tempPassword };
 }
 
 export async function updateStaffRole(staffId: number, role: string) {

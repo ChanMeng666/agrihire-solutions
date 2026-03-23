@@ -6,6 +6,7 @@ import { resetTokens, user, customer } from "../../../drizzle/schema";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto";
+import { hashPassword } from "better-auth/crypto";
 
 export async function requestPasswordReset(email: string) {
   // Check user exists
@@ -60,12 +61,10 @@ export async function resetPassword(token: string, newPassword: string) {
     return { success: false, error: "Reset link has expired" };
   }
 
-  // Update password - Better Auth uses its own hashing internally
-  // For direct DB update, we need to handle this carefully
-  // Using Better Auth's API would be ideal, but for now update directly
+  const hashedPassword = await hashPassword(newPassword);
   await db
     .update(user)
-    .set({ password: newPassword }) // Note: in production, hash with bcrypt/scrypt
+    .set({ password: hashedPassword })
     .where(eq(user.email, resetToken.email));
 
   // Delete used token
