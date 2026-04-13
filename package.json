@@ -7,8 +7,11 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start -p $PORT",
+    "build": "next build --webpack",
+    "build:worker": "opennextjs-cloudflare build",
+    "start": "next start",
+    "preview": "opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare deploy",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
@@ -25,7 +28,7 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.577.0",
-    "next": "16.2.1",
+    "next": "^16.2.3",
     "next-themes": "^0.4.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -42,6 +45,7 @@
     "esbuild": "^0.25.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.19.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -49,9 +53,10 @@
     "dotenv": "^17.3.1",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.2.1",
+    "eslint-config-next": "^16.2.3",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.81.1"
   }
 }

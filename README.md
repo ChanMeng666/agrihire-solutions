@@ -6,7 +6,9 @@
 
 A full-stack equipment rental platform for New Zealand agricultural businesses, built with Next.js 16, Neon PostgreSQL, Better Auth, and shadcn/ui. Features multi-store operations, tiered pricing, role-based access control, and real-time analytics dashboards.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-AgriHire-2d7a3a?style=for-the-badge&logo=heroku&logoColor=white)](https://agrihire-solutions-fa6d9a841bd4.herokuapp.com/)
+Deployed on Cloudflare Workers via the [OpenNext](https://opennext.js.org/) adapter.
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-agrihire.chanmeng.org-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://agrihire.chanmeng.org)
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)
@@ -15,8 +17,70 @@ A full-stack equipment rental platform for New Zealand agricultural businesses, 
 ![PostgreSQL](https://img.shields.io/badge/Neon_PostgreSQL-17-4169E1?style=flat-square&logo=postgresql)
 ![Drizzle](https://img.shields.io/badge/Drizzle_ORM-0.45-C5F74F?style=flat-square)
 ![Better Auth](https://img.shields.io/badge/Better_Auth-1.5-000?style=flat-square)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-F38020?style=flat-square&logo=cloudflare&logoColor=white)
 
 </div>
+
+---
+
+## Architecture
+
+```mermaid
+graph TB
+    subgraph "Client"
+        Browser["Browser"]
+    end
+
+    subgraph "Cloudflare Edge Network"
+        CDN["Cloudflare CDN<br/>(Static Assets)"]
+        Worker["Cloudflare Worker<br/>(Next.js via OpenNext)"]
+        Middleware["Edge Middleware<br/>(Auth & Route Protection)"]
+    end
+
+    subgraph "External Services"
+        Neon["Neon PostgreSQL<br/>(Serverless Database)"]
+        Resend["Resend<br/>(Transactional Email)"]
+        UT["Uploadthing<br/>(File Storage)"]
+    end
+
+    Browser -->|"HTTPS"| CDN
+    CDN -->|"Static files<br/>(_next/static, images)"| Browser
+    CDN -->|"Dynamic requests"| Middleware
+    Middleware -->|"Authenticated"| Worker
+    Middleware -->|"Unauthenticated<br/>(protected routes)"| Browser
+    Worker -->|"SQL over HTTP"| Neon
+    Worker -->|"API calls"| Resend
+    Worker -->|"API calls"| UT
+```
+
+## Request Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User Browser
+    participant CF as Cloudflare Edge
+    participant MW as Middleware
+    participant W as Worker (Next.js)
+    participant DB as Neon PostgreSQL
+
+    U->>CF: GET /for-hire/tractors
+    CF->>CF: Check static asset cache
+    alt Static asset (CSS, JS, images)
+        CF-->>U: Return cached asset
+    else Dynamic route
+        CF->>MW: Forward to middleware
+        MW->>MW: Check session cookie
+        alt Public route
+            MW->>W: Pass through
+        else Protected route, no session
+            MW-->>U: 307 Redirect to /login
+        end
+        W->>DB: Query via Neon HTTP
+        DB-->>W: Result rows
+        W->>W: Server-render React (RSC)
+        W-->>U: HTML + RSC payload
+    end
+```
 
 ---
 
@@ -59,7 +123,7 @@ A full-stack equipment rental platform for New Zealand agricultural businesses, 
 - **Responsive** — Mobile sidebar navigation for dashboard
 - **Loading States** — Skeleton UIs for all route groups
 - **Error Handling** — Custom 404, 500, and 403 pages
-- **Email** — Password reset emails via Resend
+- **Email** — Password reset and booking confirmation emails via Resend
 - **File Uploads** — Uploadthing integration for product/machine images
 
 ---
@@ -78,7 +142,7 @@ A full-stack equipment rental platform for New Zealand agricultural businesses, 
 | **Email** | [Resend](https://resend.com/) |
 | **Uploads** | [Uploadthing](https://uploadthing.com/) |
 | **Icons** | [Lucide React](https://lucide.dev/) |
-| **Deployment** | [Heroku](https://heroku.com/) |
+| **Deployment** | [Cloudflare Workers](https://workers.cloudflare.com/) via [@opennextjs/cloudflare](https://opennext.js.org/cloudflare) |
 
 ---
 
@@ -101,6 +165,7 @@ src/
 │   ├── dashboard/           # Sidebar, Mobile nav, Charts, Stats
 │   └── equipment/           # Hire form
 ├── lib/                     # DB, Auth, Email, User context utilities
+├── middleware.ts             # Route protection & auth redirection
 └── server/
     ├── actions/             # 8 server action modules
     └── queries/             # 9 data query modules
@@ -109,7 +174,51 @@ drizzle/
 ├── schema.ts               # 20 PostgreSQL table definitions
 ├── relations.ts             # Entity relationships
 └── seed.ts                  # Sample data seeding script
+
+# Cloudflare Workers config
+wrangler.jsonc               # Worker name, compatibility flags, env vars
+open-next.config.ts          # OpenNext adapter configuration
 ```
+
+---
+
+## Database Schema
+
+```mermaid
+erDiagram
+    USER ||--o| CUSTOMER : "has profile"
+    USER ||--o| STAFF : "has profile"
+    STORE ||--|{ STORE_HOUR : "has hours"
+    STORE ||--|{ STAFF : "employs"
+    STORE ||--|{ BOOKING : "receives"
+    CUSTOMER ||--|{ BOOKING : "makes"
+    CUSTOMER ||--o| CART : "owns"
+    CART ||--|{ CART_ITEM : "contains"
+    BOOKING ||--|{ BOOKING_ITEM : "includes"
+    BOOKING ||--o| PAYMENT : "has"
+    BOOKING_ITEM ||--o| HIRE_RECORD : "tracked by"
+    CATEGORY ||--|{ PRODUCT : "categorizes"
+    PRODUCT ||--|{ MACHINE : "has units"
+    PRODUCT ||--|{ CART_ITEM : "added to"
+    PRODUCT ||--|{ BOOKING_ITEM : "booked as"
+    PROMOTION ||--|{ PROMO_PRODUCT : "links"
+    PRODUCT ||--|{ PROMO_PRODUCT : "discounted by"
+    STORE ||--|{ MESSAGE : "receives"
+    CUSTOMER ||--|{ MESSAGE : "sends"
+```
+
+20 tables organized into domains:
+
+| Domain | Tables |
+|--------|--------|
+| **Auth & Users** | `user`, `customer`, `staff`, `reset_tokens` |
+| **Stores** | `store`, `store_hour` |
+| **Catalog** | `category`, `product`, `machine`, `service` |
+| **Bookings** | `booking`, `booking_item`, `hire_record`, `payment` |
+| **Cart** | `cart`, `cart_item` |
+| **Promotions** | `promotion`, `promo_product` |
+| **Communication** | `message`, `notifications`, `news` |
+| **System** | `setting` |
 
 ---
 
@@ -152,9 +261,12 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
+| `npm run dev` | Start Next.js development server |
+| `npm run build` | Build Next.js for production (webpack) |
+| `npm run build:worker` | Build Cloudflare Worker via OpenNext |
+| `npm run start` | Start local production server |
+| `npm run preview` | Preview Worker build locally (Wrangler dev) |
+| `npm run deploy` | Deploy to Cloudflare Workers |
 | `npm run lint` | Run ESLint |
 | `npm run db:push` | Push Drizzle schema to database |
 | `npm run db:generate` | Generate migration files |
@@ -163,44 +275,66 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ---
 
-## Database Schema
-
-20 tables organized into domains:
-
-| Domain | Tables |
-|--------|--------|
-| **Auth & Users** | `user`, `customer`, `staff`, `reset_tokens` |
-| **Stores** | `store`, `store_hour` |
-| **Catalog** | `category`, `product`, `machine`, `service` |
-| **Bookings** | `booking`, `booking_item`, `hire_record`, `payment` |
-| **Cart** | `cart`, `cart_item` |
-| **Promotions** | `promotion`, `promo_product` |
-| **Communication** | `message`, `notifications`, `news` |
-| **System** | `setting` |
-
----
-
 ## Deployment
 
-### Heroku
+The application is deployed on **Cloudflare Workers** using the `@opennextjs/cloudflare` adapter, which converts the Next.js output into a Worker-compatible bundle.
+
+```mermaid
+graph LR
+    A["next build<br/>(webpack)"] --> B["opennextjs-cloudflare<br/>build"]
+    B --> C[".open-next/<br/>worker.js + assets/"]
+    C --> D["wrangler deploy"]
+    D --> E["Cloudflare Workers<br/>Edge Network"]
+
+    style A fill:#000,color:#fff
+    style B fill:#F38020,color:#fff
+    style E fill:#F38020,color:#fff
+```
+
+### Deploy to Cloudflare Workers
 
 ```bash
-# Create Heroku app
-heroku create your-app-name
+# 1. Install dependencies
+npm install
 
-# Add Node.js buildpack
-heroku buildpacks:add heroku/nodejs
+# 2. Set secrets (one-time)
+npx wrangler secret put DATABASE_URL
+npx wrangler secret put BETTER_AUTH_SECRET
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put UPLOADTHING_TOKEN
 
-# Set environment variables
-heroku config:set \
-  DATABASE_URL="your-neon-connection-string" \
-  BETTER_AUTH_SECRET="$(openssl rand -base64 32)" \
-  BETTER_AUTH_URL="https://your-app-name.herokuapp.com" \
-  NEXT_PUBLIC_APP_URL="https://your-app-name.herokuapp.com"
+# 3. Update wrangler.jsonc with your account_id and domain URLs
 
-# Deploy
-git push heroku main
+# 4. Build & deploy
+NEXT_PUBLIC_APP_URL=https://your-domain.com npm run build:worker
+npm run deploy
 ```
+
+### Key Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `wrangler.jsonc` | Cloudflare Worker config (name, account, compatibility flags, env vars) |
+| `open-next.config.ts` | OpenNext adapter configuration |
+| `next.config.ts` | Next.js framework configuration |
+| `drizzle.config.ts` | Drizzle ORM database configuration |
+
+### Environment Variables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `DATABASE_URL` | Secret | Neon PostgreSQL connection string |
+| `BETTER_AUTH_SECRET` | Secret | Auth encryption key (min 32 chars) |
+| `RESEND_API_KEY` | Secret | Resend email service API key |
+| `UPLOADTHING_TOKEN` | Secret | Uploadthing file upload token |
+| `BETTER_AUTH_URL` | Var | Production URL (e.g. `https://agrihire.chanmeng.org`) |
+| `NEXT_PUBLIC_APP_URL` | Var | Public app URL (baked at build time) |
+
+### Important Notes
+
+- The build uses `--webpack` flag (not Turbopack) for Cloudflare Workers compatibility
+- `nodejs_compat` compatibility flag is enabled in `wrangler.jsonc` for Node.js `crypto` module support
+- `NEXT_PUBLIC_APP_URL` must be set as an environment variable during `npm run build:worker` since Next.js inlines it at build time
 
 ---
 

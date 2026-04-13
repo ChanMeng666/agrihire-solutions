@@ -9,12 +9,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Heroku deployment: listen on $PORT
-  ...(process.env.PORT
-    ? {
-        serverExternalPackages: ["@neondatabase/serverless"],
-      }
-    : {}),
 };
 
 export default nextConfig;
