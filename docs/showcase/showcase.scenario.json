@@ -1,0 +1,79 @@
+{
+  "project": "agrihire-solutions",
+  "baseUrl": "https://agrihire.chanmeng.org",
+  "outDir": "docs/showcase",
+
+  "viewports": {
+    "desktop": { "width": 1280, "height": 800, "deviceScaleFactor": 2 },
+    "mobile":  { "width": 390,  "height": 844,  "deviceScaleFactor": 3, "isMobile": true }
+  },
+
+  "reducedMotion": "reduce",
+
+  "pages": [
+    {
+      "label": "hero",
+      "url": "/",
+      "viewport": "desktop",
+      "fullPage": false,
+      "before": [
+        { "action": "wait", "ms": 2500 }
+      ]
+    },
+    {
+      "label": "equipment",
+      "url": "/for-hire",
+      "viewport": "desktop",
+      "fullPage": false,
+      "before": [
+        { "action": "wait", "ms": 2500 }
+      ]
+    },
+    {
+      "label": "equipment-item",
+      "url": "/for-hire/TRAC/TRAC-25HP",
+      "viewport": "desktop",
+      "fullPage": false,
+      "before": [
+        { "action": "wait", "ms": 2500 }
+      ]
+    },
+    {
+      "label": "promotions",
+      "url": "/promotions",
+      "viewport": "desktop",
+      "fullPage": false,
+      "before": [
+        { "action": "wait", "ms": 2000 }
+      ]
+    },
+    {
+      "label": "mobile-hero",
+      "url": "/",
+      "viewport": "mobile",
+      "fullPage": false,
+      "before": [
+        { "action": "wait", "ms": 2500 }
+      ]
+    }
+  ],
+
+  "demo": {
+    "size": { "width": 1280, "height": 720 },
+    "stepPauseMs": 400,
+    "steps": [
+      { "action": "goto", "url": "/", "timeoutMs": 30000 },
+      { "action": "wait", "ms": 4000 },
+      { "action": "scroll", "by": 350 },
+      { "action": "wait", "ms": 1800 },
+      { "action": "scroll", "by": 450 },
+      { "action": "wait", "ms": 2000 },
+      { "action": "scroll", "by": 500 },
+      { "action": "wait", "ms": 1800 },
+      { "action": "goto", "url": "/for-hire", "timeoutMs": 30000 },
+      { "action": "wait", "ms": 4000 },
+      { "action": "scroll", "by": 400 },
+      { "action": "wait", "ms": 2000 }
+    ]
+  }
+}
